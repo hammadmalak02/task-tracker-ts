@@ -4,7 +4,7 @@ import {
   filterTasks,
   groupBy,
   sortTasks,
-  sortTasksBy
+  sortTasksBy,
 } from "../src/filters.js";
 
 const tasks: Task[] = [
@@ -14,7 +14,7 @@ const tasks: Task[] = [
     priority: "low",
     completedAt: null,
     createdAt: new Date("2026-01-01"),
-    tags: ["work"]
+    tags: ["work"],
   },
   {
     id: "b" as TaskId,
@@ -22,7 +22,7 @@ const tasks: Task[] = [
     priority: "high",
     completedAt: new Date("2026-01-03"),
     createdAt: new Date("2026-01-02"),
-    tags: ["study", "work"]
+    tags: ["study", "work"],
   },
   {
     id: "c" as TaskId,
@@ -30,8 +30,8 @@ const tasks: Task[] = [
     priority: "medium",
     completedAt: null,
     createdAt: new Date("2026-01-03"),
-    tags: ["study"]
-  }
+    tags: ["study"],
+  },
 ];
 
 function makeTask(id: string, overrides: Partial<Task> = {}): Task {
@@ -42,20 +42,38 @@ function makeTask(id: string, overrides: Partial<Task> = {}): Task {
     completedAt: null,
     createdAt: new Date("2026-01-01"),
     tags: [],
-    ...overrides
+    ...overrides,
   };
 }
 
-
 function ids(list: Task[]): string[] {
   return list.map((task) => task.id);
+}
+
+function createGeneratedTasks(count: number): Task[] {
+  const priorities = ["low", "medium", "high"] as const;
+  const tagOptions = ["work", "study", "personal"] as const;
+
+  return Array.from({ length: count }, (_, index) => {
+    const completed = index % 2 === 0;
+
+    return {
+      id: `generated-${String(index).padStart(3, "0")}` as TaskId,
+      title: `Task ${count - index}`,
+      priority: priorities[index % priorities.length] ?? "low",
+      completedAt: completed
+        ? new Date(Date.UTC(2026, 0, (index % 28) + 1))
+        : null,
+      createdAt: new Date(Date.UTC(2026, 0, (index % 28) + 1)),
+      tags: [tagOptions[index % tagOptions.length] ?? "work"],
+    };
+  });
 }
 
 describe("filterTasks", () => {
   it("returns all tasks when no filters are supplied", () => {
     expect(filterTasks(tasks)).toHaveLength(3);
   });
-
 
   it("returns a copy, not the same array", () => {
     expect(filterTasks(tasks)).not.toBe(tasks);
@@ -65,20 +83,20 @@ describe("filterTasks", () => {
     expect(
       filterTasks(tasks, {
         priority: "high",
-        completed: true
-      }).map((task) => task.id)
+        completed: true,
+      }).map((task) => task.id),
     ).toEqual(["b"]);
   });
 
   it("filters tasks by priority only", () => {
     expect(
-      filterTasks(tasks, { priority: "medium" }).map((task) => task.id)
+      filterTasks(tasks, { priority: "medium" }).map((task) => task.id),
     ).toEqual(["c"]);
   });
 
   it("filters high priority tasks", () => {
     expect(
-      filterTasks(tasks, { priority: "high" }).map((task) => task.id)
+      filterTasks(tasks, { priority: "high" }).map((task) => task.id),
     ).toEqual(["b"]);
   });
 
@@ -90,13 +108,13 @@ describe("filterTasks", () => {
 
   it("filters completed tasks", () => {
     expect(
-      filterTasks(tasks, { completed: true }).map((task) => task.id)
+      filterTasks(tasks, { completed: true }).map((task) => task.id),
     ).toEqual(["b"]);
   });
 
   it("filters uncompleted tasks", () => {
     expect(
-      filterTasks(tasks, { completed: false }).map((task) => task.id)
+      filterTasks(tasks, { completed: false }).map((task) => task.id),
     ).toEqual(["a", "c"]);
   });
 
@@ -105,9 +123,7 @@ describe("filterTasks", () => {
   });
 
   it("matches multiple tags using OR logic", () => {
-    expect(
-      filterTasks(tasks, { tags: ["study", "work"] })
-    ).toHaveLength(3);
+    expect(filterTasks(tasks, { tags: ["study", "work"] })).toHaveLength(3);
   });
 
   it("returns all tasks when tags array is empty", () => {
@@ -115,33 +131,31 @@ describe("filterTasks", () => {
   });
 
   it("returns empty array when no requested tag matches", () => {
-    expect(
-      filterTasks(tasks, { tags: ["personal"] })
-    ).toHaveLength(0);
+    expect(filterTasks(tasks, { tags: ["personal"] })).toHaveLength(0);
   });
 
   it("filters by creation date range", () => {
     expect(
       filterTasks(tasks, {
         createdAfter: new Date("2026-01-01"),
-        createdBefore: new Date("2026-01-02")
-      }).map((task) => task.id)
+        createdBefore: new Date("2026-01-02"),
+      }).map((task) => task.id),
     ).toEqual(["a", "b"]);
   });
 
   it("excludes tasks created before createdAfter", () => {
     expect(
       filterTasks(tasks, {
-        createdAfter: new Date("2026-01-02")
-      }).map((task) => task.id)
+        createdAfter: new Date("2026-01-02"),
+      }).map((task) => task.id),
     ).toEqual(["b", "c"]);
   });
 
   it("excludes tasks created after createdBefore", () => {
     expect(
       filterTasks(tasks, {
-        createdBefore: new Date("2026-01-02")
-      }).map((task) => task.id)
+        createdBefore: new Date("2026-01-02"),
+      }).map((task) => task.id),
     ).toEqual(["a", "b"]);
   });
 
@@ -149,8 +163,8 @@ describe("filterTasks", () => {
     expect(
       filterTasks(tasks, {
         createdAfter: new Date("2026-01-01"),
-        createdBefore: new Date("2026-01-01")
-      }).map((task) => task.id)
+        createdBefore: new Date("2026-01-01"),
+      }).map((task) => task.id),
     ).toEqual(["a"]);
   });
 
@@ -159,52 +173,56 @@ describe("filterTasks", () => {
       filterTasks(tasks, {
         priority: "high",
         tags: ["study"],
-        createdAfter: new Date("2026-01-02")
-      }).map((task) => task.id)
+        createdAfter: new Date("2026-01-02"),
+      }).map((task) => task.id),
     ).toEqual(["b"]);
   });
 });
 
 describe("sortTasks", () => {
   it("sorts titles without case sensitivity", () => {
-    expect(
-      sortTasks(tasks, "title", "asc").map((task) => task.title)
-    ).toEqual(["Alpha", "beta", "Gamma"]);
+    expect(sortTasks(tasks, "title", "asc").map((task) => task.title)).toEqual([
+      "Alpha",
+      "beta",
+      "Gamma",
+    ]);
   });
 
   it("sorts titles in descending order", () => {
-    expect(
-      sortTasks(tasks, "title", "desc").map((task) => task.title)
-    ).toEqual(["Gamma", "beta", "Alpha"]);
+    expect(sortTasks(tasks, "title", "desc").map((task) => task.title)).toEqual(
+      ["Gamma", "beta", "Alpha"],
+    );
   });
 
   it("sorts ascending when no direction is given", () => {
-    expect(
-      sortTasks(tasks, "title").map((task) => task.title)
-    ).toEqual(["Alpha", "beta", "Gamma"]);
+    expect(sortTasks(tasks, "title").map((task) => task.title)).toEqual([
+      "Alpha",
+      "beta",
+      "Gamma",
+    ]);
   });
 
   it("sorts priorities by low, medium, high", () => {
     expect(
-      sortTasks(tasks, "priority", "asc").map((task) => task.priority)
+      sortTasks(tasks, "priority", "asc").map((task) => task.priority),
     ).toEqual(["low", "medium", "high"]);
   });
 
   it("sorts priorities in descending order", () => {
     expect(
-      sortTasks(tasks, "priority", "desc").map((task) => task.priority)
+      sortTasks(tasks, "priority", "desc").map((task) => task.priority),
     ).toEqual(["high", "medium", "low"]);
   });
 
   it("places uncompleted tasks last when sorting completion dates", () => {
     expect(
-      sortTasks(tasks, "completedAt", "asc").map((task) => task.id)
+      sortTasks(tasks, "completedAt", "asc").map((task) => task.id),
     ).toEqual(["b", "a", "c"]);
   });
 
   it("keeps uncompleted tasks last in descending completion order", () => {
     expect(
-      sortTasks(tasks, "completedAt", "desc").map((task) => task.id)
+      sortTasks(tasks, "completedAt", "desc").map((task) => task.id),
     ).toEqual(["b", "a", "c"]);
   });
 
@@ -214,7 +232,7 @@ describe("sortTasks", () => {
 
     expect(ids(sortTasks([pending, done], "completedAt", "asc"))).toEqual([
       "done",
-      "pending"
+      "pending",
     ]);
   });
 
@@ -224,26 +242,28 @@ describe("sortTasks", () => {
 
     expect(ids(sortTasks([done, pending], "completedAt", "asc"))).toEqual([
       "done",
-      "pending"
+      "pending",
     ]);
   });
 
   it("sorts creation dates in ascending order", () => {
-    expect(
-      sortTasks(tasks, "createdAt", "asc").map((task) => task.id)
-    ).toEqual(["a", "b", "c"]);
+    expect(sortTasks(tasks, "createdAt", "asc").map((task) => task.id)).toEqual(
+      ["a", "b", "c"],
+    );
   });
 
   it("sorts creation dates in descending order", () => {
     expect(
-      sortTasks(tasks, "createdAt", "desc").map((task) => task.id)
+      sortTasks(tasks, "createdAt", "desc").map((task) => task.id),
     ).toEqual(["c", "b", "a"]);
   });
 
   it("sorts by first tag, then by id when first tags match", () => {
-    expect(
-      sortTasks(tasks, "tags", "asc").map((task) => task.id)
-    ).toEqual(["b", "c", "a"]);
+    expect(sortTasks(tasks, "tags", "asc").map((task) => task.id)).toEqual([
+      "b",
+      "c",
+      "a",
+    ]);
   });
 
   it("sorts tasks with no tags before tagged tasks", () => {
@@ -252,7 +272,7 @@ describe("sortTasks", () => {
 
     expect(ids(sortTasks([tagged, empty], "tags", "asc"))).toEqual([
       "empty",
-      "tagged"
+      "tagged",
     ]);
   });
 
@@ -289,10 +309,13 @@ describe("sortTasks", () => {
     const lower = makeTask("x", { title: "alpha" });
     const upper = makeTask("y", { title: "Alpha" });
 
-    const sorted = sortTasksBy([lower, upper], [
-      { by: "title", direction: "asc" },
-      { by: "id", direction: "desc" }
-    ]);
+    const sorted = sortTasksBy(
+      [lower, upper],
+      [
+        { by: "title", direction: "asc" },
+        { by: "id", direction: "desc" },
+      ],
+    );
 
     expect(ids(sorted)).toEqual(["y", "x"]);
   });
@@ -308,18 +331,18 @@ describe("sortTasks", () => {
   it("preserves original order when sorting values are equal", () => {
     const samePriority = tasks.map((task) => ({
       ...task,
-      priority: "low" as const
+      priority: "low" as const,
     }));
 
     expect(
-      sortTasks(samePriority, "priority", "asc").map((task) => task.id)
+      sortTasks(samePriority, "priority", "asc").map((task) => task.id),
     ).toEqual(["a", "b", "c"]);
   });
 
   it("supports multiple sort keys", () => {
     const sorted = sortTasksBy(tasks, [
       { by: "priority", direction: "asc" },
-      { by: "title", direction: "desc" }
+      { by: "title", direction: "desc" },
     ]);
 
     expect(sorted.map((task) => task.id)).toEqual(["a", "c", "b"]);
@@ -328,21 +351,23 @@ describe("sortTasks", () => {
   it("supports multiple sort keys when first key is equal", () => {
     const samePriority = tasks.map((task) => ({
       ...task,
-      priority: "low" as const
+      priority: "low" as const,
     }));
 
     const sorted = sortTasksBy(samePriority, [
       { by: "priority", direction: "asc" },
-      { by: "title", direction: "asc" }
+      { by: "title", direction: "asc" },
     ]);
 
     expect(sorted.map((task) => task.id)).toEqual(["b", "a", "c"]);
   });
 
   it("preserves original order when no sort rules are supplied", () => {
-    expect(
-      sortTasksBy(tasks, []).map((task) => task.id)
-    ).toEqual(["a", "b", "c"]);
+    expect(sortTasksBy(tasks, []).map((task) => task.id)).toEqual([
+      "a",
+      "b",
+      "c",
+    ]);
   });
 
   it("rejects invalid sort keys at compile time", () => {
@@ -362,7 +387,7 @@ describe("groupBy", () => {
 
   it("groups multiple items under the same key", () => {
     const grouped = groupBy(tasks, (task) =>
-      task.completedAt === null ? "pending" : "completed"
+      task.completedAt === null ? "pending" : "completed",
     );
 
     expect(grouped.pending?.map((task) => task.id)).toEqual(["a", "c"]);
@@ -380,5 +405,100 @@ describe("groupBy", () => {
 
     expect(grouped.work?.map((task) => task.id)).toEqual(["a"]);
     expect(grouped.study?.map((task) => task.id)).toEqual(["b", "c"]);
+  });
+});
+
+describe("property-style tests for filtering and sorting", () => {
+  const generatedTasks = createGeneratedTasks(100);
+
+  it("never returns more tasks than the original input", () => {
+    const filterOptions = [
+      { priority: "high" as const },
+      { completed: true },
+      { completed: false },
+      { tags: ["work"] },
+      { tags: ["study", "personal"] },
+      {
+        priority: "medium" as const,
+        completed: false,
+        tags: ["work", "study"],
+      },
+    ];
+
+    const originalIds = new Set(ids(generatedTasks));
+
+    for (const filters of filterOptions) {
+      const result = filterTasks(generatedTasks, filters);
+      const resultIds = ids(result);
+
+      expect(result.length).toBeLessThanOrEqual(generatedTasks.length);
+
+      for (const id of resultIds) {
+        expect(originalIds.has(id)).toBe(true);
+      }
+
+      expect(new Set(resultIds).size).toBe(resultIds.length);
+    }
+  });
+
+  it("always returns tasks that satisfy all supplied filter conditions", () => {
+    const filters = {
+      priority: "medium" as const,
+      completed: false,
+      tags: ["work", "study"],
+      createdAfter: new Date("2026-01-05"),
+      createdBefore: new Date("2026-01-25"),
+    };
+
+    const result = filterTasks(generatedTasks, filters);
+
+    for (const task of result) {
+      expect(task.priority).toBe(filters.priority);
+      expect(task.completedAt).toBeNull();
+
+      expect(filters.tags.some((tag) => task.tags.includes(tag))).toBe(true);
+
+      expect(task.createdAt.getTime()).toBeGreaterThanOrEqual(
+        filters.createdAfter.getTime(),
+      );
+
+      expect(task.createdAt.getTime()).toBeLessThanOrEqual(
+        filters.createdBefore.getTime(),
+      );
+    }
+  });
+
+  it("produces the same sorted result when sorting an already sorted array", () => {
+    const sortKeys: (keyof Task)[] = [
+      "id",
+      "title",
+      "priority",
+      "createdAt",
+      "completedAt",
+      "tags",
+    ];
+
+    for (const key of sortKeys) {
+      for (const direction of ["asc", "desc"] as const) {
+        const firstSort = sortTasks(generatedTasks, key, direction);
+
+        const secondSort = sortTasks(firstSort, key, direction);
+
+        expect(ids(secondSort)).toEqual(ids(firstSort));
+      }
+    }
+  });
+
+  it("does not change the original generated dataset during filtering or sorting", () => {
+    const originalTasks = structuredClone(generatedTasks);
+
+    filterTasks(generatedTasks, {
+      priority: "high",
+      completed: true,
+    });
+
+    sortTasks(generatedTasks, "title", "desc");
+
+    expect(generatedTasks).toEqual(originalTasks);
   });
 });
